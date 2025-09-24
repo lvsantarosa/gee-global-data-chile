@@ -7,7 +7,7 @@ Currently, the repository includes two main applications:
 1.  **Runoff Potential Analyzer:** An advanced tool for hydrological modeling.
 2.  **Satellite Image Downloader:** A utility for searching and downloading Sentinel-2 and Landsat 8/9 imagery.
 
-### 1. Runoff Potential Analyzer (`MULTICRITERIO_GEE_Chile.js`)
+### 1. [Runoff Potential Analyzer](https://lucasviturisantarosa.users.earthengine.app/view/multicritrio-escorrentia-scs) 
 This application performs a multi-criteria analysis to estimate surface runoff potential using a robust adaptation of the SCS/NRCS Curve Number (CN) method. It is an ideal tool for territorial planning, watershed management, risk analysis, and agronomic studies.
 
 #### Key Features:
@@ -32,7 +32,7 @@ This application performs a multi-criteria analysis to estimate surface runoff p
 5.  Click the **"2. Analizar Potencial de Escorrentía (CN)"** button to generate the final map.
 6.  Use the download buttons to obtain all generated data.
 
-### 2. Satellite Image Downloader (`DOWNLOAD_S2_L8_L9_Chile.js`)
+### 2. [Satellite Image Downloader](https://lucasviturisantarosa.users.earthengine.app/view/download-imagenes-satelitales) 
 
 This application is a practical utility designed for agronomists, researchers, and students to easily obtain Analysis-Ready Data from satellite imagery.
 
