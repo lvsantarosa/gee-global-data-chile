@@ -1,4 +1,5 @@
 #Geoprocessing Tools for Territorial Analysis in Chile
+
 This repository contains a set of scripts for Google Earth Engine (GEE) developed to facilitate the analysis of water, agricultural, and environmental resources within the territorial context of Chile. The tools are designed to be interactive and accessible, allowing users with varying levels of geoprocessing experience to generate and download complex data intuitively.
 
 ##Available Scripts
