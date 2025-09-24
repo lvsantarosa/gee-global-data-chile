@@ -41,7 +41,7 @@ This application is a practical utility designed for agronomists, researchers, a
 * **Custom Filters:** Enables filtering of images by date range and maximum cloud cover percentage.
 * **Single Image or Mosaic:** Provides the option to select the single best image (least cloudy, highest area coverage) or to create a median mosaic from all available images in the period.
 * **Automatic NDVI Calculation:** The application automatically generates and includes the Normalized Difference Vegetation Index (NDVI) band.
-* **Flexible Downloads:** Allows for the download of individual bands (Blue, Green, Red, NIR, and NDVI) via direct links, or the export of a complete image stack to Google Drive, ready for use in GIS software like QGIS or ArcGIS.
+* **Flexible Downloads:** Allows for the download of individual bands (Blue, Green, Red, NIR, and NDVI) via direct links, or the export of a complete image stack to Google Drive, ready for use in GIS software.
 
 #### Data used:
 * Copernicus Sentinel-2 SR MSI, Level-2A
