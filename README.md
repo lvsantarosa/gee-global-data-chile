@@ -172,7 +172,7 @@ gee-global-data-chile/
 
 ## 📝 Cómo citar
 
-> Santarosa, L. V. (2025). *GEE Global Data — Chile: herramientas de geoprocesamiento para el análisis territorial*. Laboratorio de Recursos Hídricos y Geotecnologías, Escuela de Agronomía, Pontificia Universidad Católica de Valparaíso. https://github.com/lvsantarosa/gee-global-data-chile
+> Santarosa, L. V. (2025). *GEE Global Data for Chile: herramientas de geoprocesamiento para el análisis territorial*. Laboratorio de Recursos Hídricos y Geotecnologías, Escuela de Agronomía, Pontificia Universidad Católica de Valparaíso. https://github.com/lvsantarosa/gee-global-data-chile
 
 ## 📄 Licencia
 
