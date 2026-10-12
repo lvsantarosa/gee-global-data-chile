@@ -1,4 +1,4 @@
-<h1 align="center">🌎 GEE Global Data — Chile</h1>
+<h1 align="center">🌎 GEE Global Data for Chile</h1>
 
 <p align="center">
   <b>Herramientas de geoprocesamiento en Google Earth Engine para el análisis territorial de Chile</b><br>
