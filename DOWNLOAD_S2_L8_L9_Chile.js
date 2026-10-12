@@ -1,8 +1,9 @@
 // =================================================================================
-// Laboratoria de Recursos Hidricos y Geotecnologias
-// Escuela de Agronomia - Pontificia Universidad Catolica de Valparaíso
+// Laboratorio de Recursos Hídricos y Geotecnologías
+// Escuela de Agronomía - Pontificia Universidad Católica de Valparaíso
 // Autor: Lucas Vituri Santarosa
-// Elaborado en 23/9/2025 con ayuda de Gemini
+// Elaborado el 23/9/2025 con ayuda de Gemini
+// Licencia: MIT (ver archivo LICENSE del repositorio)
 // Propósito: Descargar imágenes Landsat 8/9 o Sentinel-2 para provincias y comunas de Chile.
 // Importante: Las imágenes de Sentinel-2 a 10m pueden ser muy grandes para la descarga
 // directa por enlaces. En esos casos, utilice Landsat o la exportación a Google Drive.
@@ -21,7 +22,18 @@ var config = {
     provincia: 'Provincia',
     comuna: 'Comuna',
     provEnComunas: 'Provincia'
-  }
+  },
+  opcionProvinciaCompleta: '--- (Analizar Provincia Completa) ---',
+  diasPorDefecto: 90   // Ventana temporal inicial sugerida en el formulario
+};
+
+// Devuelve una fecha en formato YYYY-MM-DD, desplazada en días respecto de hoy.
+var fechaRelativa = function(dias) {
+  var d = new Date();
+  d.setDate(d.getDate() + dias);
+  var mes = ('0' + (d.getMonth() + 1)).slice(-2);
+  var dia = ('0' + d.getDate()).slice(-2);
+  return d.getFullYear() + '-' + mes + '-' + dia;
 };
 
 // =================================================================================
@@ -67,8 +79,8 @@ app.ui.createWidgets = function() {
   });
 
   // --- Otros Parámetros ---
-  app.ui.startDateBox = ui.Textbox({placeholder: 'YYYY-MM-DD', value: '2025-01-01', style: {width: '120px'}});
-  app.ui.endDateBox = ui.Textbox({placeholder: 'YYYY-MM-DD', value: '2025-03-31', style: {width: '120px'}});
+  app.ui.startDateBox = ui.Textbox({placeholder: 'YYYY-MM-DD', value: fechaRelativa(-config.diasPorDefecto), style: {width: '120px'}});
+  app.ui.endDateBox = ui.Textbox({placeholder: 'YYYY-MM-DD', value: fechaRelativa(0), style: {width: '120px'}});
   app.ui.cloudCoverBox = ui.Textbox({value: '25', style: {width: '100px'}});
   app.ui.coverageBox = ui.Textbox({value: '95', style: {width: '100px'}});
   app.ui.mosaicSelect = ui.Select({
@@ -139,7 +151,7 @@ app.handlers.onProvinciaChange = function(provinciaNombre) {
   var comunasNombres = comunasFiltradas.aggregate_array(config.columnas.comuna).sort();
   
   comunasNombres.evaluate(function(nombres) {
-    nombres.unshift('--- (Analizar Provincia Completa) ---');
+    nombres.unshift(config.opcionProvinciaCompleta);
     app.ui.comunaSelect.items().reset(nombres);
     app.ui.comunaSelect.setValue(nombres[0], false);
     app.ui.comunaSelect.setDisabled(false);
@@ -152,26 +164,41 @@ app.handlers.onComunaChange = function(comunaNombre) {
   var provinciaFeature = app.state.selectedProvinciaFeature;
   var aoiFeature;
   
-  if (comunaNombre !== '--- (Analizar Provincia Completa) ---') {
+  if (comunaNombre !== config.opcionProvinciaCompleta) {
     aoiFeature = assets.comunas
-      .filter(ee.Filter.eq(config.columnas.provEnComunas, provinciaFeature.get(config.columnas.provincia)))
+      .filter(ee.Filter.eq(config.columnas.provEnComunas, app.ui.provinciaSelect.getValue()))
       .filter(ee.Filter.eq(config.columnas.comuna, comunaNombre))
       .first();
     app.state.selectedLocationName = comunaNombre;
   } else {
     aoiFeature = provinciaFeature;
-    app.state.selectedLocationName = provinciaFeature.get(config.columnas.provincia).getInfo();
+    app.state.selectedLocationName = app.ui.provinciaSelect.getValue();
   }
   
   app.state.aoi = aoiFeature.geometry();
-  app.ui.mapPanel.clear();
+  app.ui.mapPanel.layers().reset();
+  app.ui.resultPanel.clear();
+  app.ui.downloadPanel.clear();
+  app.ui.downloadButton.setDisabled(true);
+  app.ui.exportButton.setDisabled(true);
   app.ui.mapPanel.centerObject(app.state.aoi, 11);
   app.ui.mapPanel.addLayer(app.state.aoi, {color: '#FFFF00', fillColor: '00000000', width: 2.0}, 'Área de Análisis');
 };
 
 app.handlers.runAnalysis = function() {
+  var errores = app.helpers.validarParametros();
+  if (errores.length > 0) {
+    app.ui.resultPanel.clear().add(ui.Label('❌ Revise los parámetros:', {color: 'red', fontWeight: 'bold'}));
+    errores.forEach(function(e) { app.ui.resultPanel.add(ui.Label('• ' + e, {color: 'red', fontSize: '11px'})); });
+    return;
+  }
+
   app.ui.runButton.setDisabled(true);
+  app.ui.downloadButton.setDisabled(true);
+  app.ui.exportButton.setDisabled(true);
   app.ui.downloadPanel.clear();
+  app.ui.mapPanel.layers().reset();
+  app.ui.mapPanel.addLayer(app.state.aoi, {color: '#FFFF00', fillColor: '00000000', width: 2.0}, 'Área de Análisis');
   app.ui.resultPanel.clear().add(ui.Label('🔎 Analizando...', {fontWeight: 'bold'}));
   
   var collection = app.helpers.getImageCollection();
@@ -216,7 +243,7 @@ app.handlers.runAnalysis = function() {
 
 app.handlers.getDownloadLinks = function() {
   app.ui.downloadButton.setDisabled(true);
-  app.ui.downloadPanel.clear().add(ui.Label('⚙️ Gerando links de download...'));
+  app.ui.downloadPanel.clear().add(ui.Label('⚙️ Generando enlaces de descarga...'));
   
   var locationName = app.state.selectedLocationName.replace(/\s/g, '_');
   var scale = (app.ui.satelliteSelect.getValue() === 'Sentinel-2') ? 10 : 30;
@@ -227,17 +254,21 @@ app.handlers.getDownloadLinks = function() {
     {name: 'NDVI', label: 'Índice NDVI'}
   ];
   
-  bandsToExport.forEach(function(bandInfo, index) {
+  app.ui.downloadPanel.clear().add(ui.Label('Enlaces de descarga (un GeoTIFF por banda):', {fontWeight: 'bold'}));
+
+  // Las respuestas no llegan necesariamente en orden: se cuentan para reactivar
+  // el botón sólo cuando todas las bandas han terminado.
+  var pendientes = bandsToExport.length;
+  bandsToExport.forEach(function(bandInfo) {
     var singleBandImage = app.state.finalImage.select(bandInfo.name);
     var fileName = app.ui.satelliteSelect.getValue() + '_' + locationName + '_' + bandInfo.label.replace(/\s/g, '');
     var params = { name: fileName, scale: scale, region: app.state.aoi };
-    
-    if (index === 0) app.ui.downloadPanel.clear().add(ui.Label('Links de Download (GeoTIFF por camada):', {fontWeight: 'bold'}));
-    
+
     singleBandImage.getDownloadURL(params, function(url, error) {
       if (url) app.ui.downloadPanel.add(ui.Label(bandInfo.label, {}, url));
-      else app.ui.downloadPanel.add(ui.Label(bandInfo.label + ': Erro', {color: 'red'}));
-      if (index === bandsToExport.length - 1) app.ui.downloadButton.setDisabled(false);
+      else app.ui.downloadPanel.add(ui.Label(bandInfo.label + ': error (pruebe exportar a Google Drive)', {color: 'red'}));
+      pendientes = pendientes - 1;
+      if (pendientes === 0) app.ui.downloadButton.setDisabled(false);
     });
   });
 };
@@ -276,6 +307,29 @@ app.handlers.exportImage = function() {
 // =================================================================================
 // 4. FUNCIONES DE AYUDA (Helpers)
 // =================================================================================
+// Comprueba el formato de las fechas y los rangos numéricos del formulario.
+app.helpers.validarParametros = function() {
+  var errores = [];
+  var patronFecha = /^\d{4}-\d{2}-\d{2}$/;
+  var inicio = app.ui.startDateBox.getValue();
+  var fin = app.ui.endDateBox.getValue();
+
+  if (!patronFecha.test(inicio)) errores.push('La fecha inicial debe tener el formato YYYY-MM-DD.');
+  if (!patronFecha.test(fin)) errores.push('La fecha final debe tener el formato YYYY-MM-DD.');
+  if (patronFecha.test(inicio) && patronFecha.test(fin) && inicio >= fin) {
+    errores.push('La fecha inicial debe ser anterior a la fecha final.');
+  }
+
+  var nubes = parseFloat(app.ui.cloudCoverBox.getValue());
+  if (isNaN(nubes) || nubes <= 0 || nubes > 100) errores.push('La nubosidad máxima debe ser un número entre 0 y 100.');
+
+  var cobertura = parseFloat(app.ui.coverageBox.getValue());
+  if (isNaN(cobertura) || cobertura < 0 || cobertura > 100) errores.push('La cobertura mínima debe ser un número entre 0 y 100.');
+
+  if (!app.state.aoi) errores.push('Seleccione primero una provincia.');
+  return errores;
+};
+
 app.helpers.getImageCollection = function() {
   var satellite = app.ui.satelliteSelect.getValue();
   var startDate = app.ui.startDateBox.getValue();

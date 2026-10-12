@@ -1,69 +1,189 @@
-# Geoprocessing tools for territorial analysis in Chile
+<h1 align="center">🌎 GEE Global Data — Chile</h1>
 
-This repository contains a set of scripts for Google Earth Engine (GEE) developed to facilitate the analysis of water, agricultural, and environmental resources within the territorial context of Chile. The tools are designed to be interactive and accessible, allowing users with varying levels of geoprocessing experience to generate and download complex data intuitively.
+<p align="center">
+  <b>Herramientas de geoprocesamiento en Google Earth Engine para el análisis territorial de Chile</b><br>
+  <sub>Recursos hídricos · Agricultura · Medio ambiente</sub>
+</p>
 
-## Available scripts
-Currently, the repository includes two main applications:
-1.  **Runoff Potential Analyzer:** An advanced tool for hydrological modeling.
-2.  **Satellite Image Downloader:** A utility for searching and downloading Sentinel-2 and Landsat 8/9 imagery.
+<p align="center">
+  <img alt="Plataforma" src="https://img.shields.io/badge/Google%20Earth%20Engine-Code%20Editor-4285F4?logo=google&logoColor=white">
+  <img alt="Lenguaje" src="https://img.shields.io/badge/JavaScript-GEE%20API-F7DF1E?logo=javascript&logoColor=black">
+  <img alt="Cobertura" src="https://img.shields.io/badge/Cobertura-Chile%20(provincias%20y%20comunas)-C8102E">
+  <img alt="Apps" src="https://img.shields.io/badge/Apps%20publicadas-2-success">
+  <a href="LICENSE"><img alt="Licencia" src="https://img.shields.io/badge/Licencia-MIT-blue"></a>
+</p>
 
-### 1. [Runoff Potential Analyzer](https://lucasviturisantarosa.users.earthengine.app/view/multicritrio-escorrentia-scs) 
-This application performs a multi-criteria analysis to estimate surface runoff potential using a robust adaptation of the SCS/NRCS Curve Number (CN) method. It is an ideal tool for territorial planning, watershed management, risk analysis, and agronomic studies.
+<p align="center">
+  <a href="https://lucasviturisantarosa.users.earthengine.app/view/multicritrio-escorrentia-scs"><b>▶ Abrir App 1 · Escorrentía (CN)</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://lucasviturisantarosa.users.earthengine.app/view/download-imagenes-satelitales"><b>▶ Abrir App 2 · Descarga de imágenes</b></a>
+</p>
 
-#### Key features:
-* **Flexible Area Selection:** Allows for analysis by selecting Provinces and Communes of Chile.
-* **Configurable Land Use Data:** Offers the option to choose between ESA WorldCover land use data for the years 2020 or 2021.
-* **Detailed Soil Classification:** Implements a robust classifier that first determines one of the 12 USDA textural classes for each pixel and then maps it to one of the 4 Hydrologic Soil Groups (HSG).
-* **Advanced Terrain Processing:** Applies a "fill" filter to the Digital Elevation Model (DEM) to correct for imperfections before calculating slope percentage and reclassifying it into 7 relief categories.
-* **Referenced Runoff Model:** Calculates the base CN from the Soil-Land Use interaction and adjusts it using a continuous, scientifically-validated formula (adapted from the SWAT model) to incorporate the effect of the slope.
-* **Comprehensive Visualization:** Displays all base and intermediate layers (Slope Classes, Soil Groups, etc.) on the map, allowing for a complete visual assessment of the model.
-* **Consolidated Download Options:** Allows for the download of all generated layers (base, intermediate, and the final runoff map) through direct links or by exporting to Google Drive.
+---
 
-#### Data used:
-* **Terrain:** NASA NASADEM HGT V001 (30m)
-* **Soil:** ISRIC SoilGrids 2.0 (250m)
-* **Land Use/Cover:** ESA WorldCover (10m)
+Este repositorio reúne **aplicaciones interactivas de Google Earth Engine (GEE)** pensadas para que agrónomos, investigadores, estudiantes y profesionales de la planificación territorial puedan generar y descargar información geoespacial compleja **sin escribir código**: basta copiar el script, ejecutarlo y usar el panel lateral.
 
-#### How to use:
-1.  Open the script in the Google Earth Engine Code Editor.
-2.  Select the Province and, optionally, the Commune of interest.
-3.  In "Step 2", select the desired year for the land use data.
-4.  Click the **"1. Analizar y Visualizar Capas Base"** button. Wait for all input layers (Soil Group, Slope Classes, etc.) to be processed and displayed on the map.
-5.  Click the **"2. Analizar Potencial de Escorrentía (CN)"** button to generate the final map.
-6.  Use the download buttons to obtain all generated data.
+## 📑 Contenido
 
-### 2. [Satellite Image Downloader](https://lucasviturisantarosa.users.earthengine.app/view/download-imagenes-satelitales) 
+- [Aplicaciones disponibles](#-aplicaciones-disponibles)
+  - [1. Analizador de Potencial de Escorrentía (CN)](#1-analizador-de-potencial-de-escorrentía-cn)
+  - [2. Descargador de Imágenes Satelitales](#2-descargador-de-imágenes-satelitales)
+- [Instalación y ejecución](#-instalación-y-ejecución)
+- [Estructura del repositorio](#-estructura-del-repositorio)
+- [Requisitos y notas técnicas](#-requisitos-y-notas-técnicas)
+- [Cómo citar](#-cómo-citar)
+- [Licencia](#-licencia)
+- [Autoría y contacto](#-autoría-y-contacto)
 
-This application is a practical utility designed for agronomists, researchers, and students to easily obtain Analysis-Ready Data from satellite imagery.
+## 🧰 Aplicaciones disponibles
 
-#### Key features:
-* **Satellite Selection:** Allows choosing between **Sentinel-2**, **Landsat 9**, and **Landsat 8** imagery.
-* **Custom Filters:** Enables filtering of images by date range and maximum cloud cover percentage.
-* **Single Image or Mosaic:** Provides the option to select the single best image (least cloudy, highest area coverage) or to create a median mosaic from all available images in the period.
-* **Automatic NDVI Calculation:** The application automatically generates and includes the Normalized Difference Vegetation Index (NDVI) band.
-* **Flexible Downloads:** Allows for the download of individual bands (Blue, Green, Red, NIR, and NDVI) via direct links, or the export of a complete image stack to Google Drive, ready for use in GIS software.
+| # | Aplicación | Script | ¿Para qué sirve? | App web |
+|---|------------|--------|------------------|---------|
+| 1 | **Analizador de Potencial de Escorrentía** | [`MULTICRITERIO_GEE_Chile.js`](MULTICRITERIO_GEE_Chile.js) | Modelación hidrológica multicriterio con el método del Número de Curva (SCS/NRCS) | [Abrir](https://lucasviturisantarosa.users.earthengine.app/view/multicritrio-escorrentia-scs) |
+| 2 | **Descargador de Imágenes Satelitales** | [`DOWNLOAD_S2_L8_L9_Chile.js`](DOWNLOAD_S2_L8_L9_Chile.js) | Búsqueda, visualización y descarga de imágenes Sentinel-2 y Landsat 8/9 listas para análisis | [Abrir](https://lucasviturisantarosa.users.earthengine.app/view/download-imagenes-satelitales) |
 
-#### Data used:
-* Copernicus Sentinel-2 SR MSI, Level-2A
-* Landsat 8/9 Collection 2, Level-2
+---
 
-#### How to use:
-1.  Open the script in the Google Earth Engine Code Editor.
-2.  Select the Province and, optionally, the Commune.
-3.  Select the desired satellite.
-4.  Define the date range and maximum cloud cover.
-5.  Choose whether you want a single image or a mosaic.
-6.  Click **"1. Analizar y Visualizar"**.
-7.  After visualization, use the download buttons to get the data.
+### 1. Analizador de Potencial de Escorrentía (CN)
 
-### How to install and run the scripts
-1.  Log in to your [Google Earth Engine](https://code.earthengine.google.com/) account.
-2.  Copy the entire content of one of the `.js` files from this repository.
-3.  Paste the code into the GEE Code Editor.
-4.  Click **"Run"** to load the application interface in the side panel.
-5.  Follow the "How to Use" instructions for each application.
+> Estima el **potencial de escorrentía superficial** combinando suelo, uso de suelo y relieve mediante una adaptación robusta del método del **Número de Curva (CN)** del SCS/NRCS. Útil en planificación territorial, gestión de cuencas, análisis de riesgo y estudios agronómicos.
 
-### Author
-* **Author:** Lucas Vituri Santarosa
-* **Institution:** Laboratorio de Recursos Hídricos y Geotecnologías, Escuela de Agronomía, Pontificia Universidad Católica de Valparaíso.
-* This script was developed and refined with the assistance of Google's Gemini AI.
+**Características principales**
+
+- 🗺️ **Selección flexible del área** — análisis por **provincia** y, opcionalmente, por **comuna**.
+- 🌱 **Uso de suelo configurable** — ESA WorldCover **2020** o **2021**.
+- 🧪 **Clasificación textural detallada** — determina una de las **12 clases texturales USDA** por píxel (arena/limo/arcilla) y la traduce a uno de los **4 Grupos Hidrológicos de Suelo (A–D)**.
+- ⛰️ **Procesamiento avanzado del terreno** — suavizado por **mediana focal** (60 m) del DEM para atenuar ruido y vacíos antes de calcular la pendiente, con reclasificación en **7 clases de relieve**.
+- 💧 **Modelo de escorrentía referenciado** — CN base a partir de la interacción Suelo × Uso de suelo (las 11 clases de WorldCover, incluidas nieve/hielo y cuerpos de agua), ajustado por pendiente con una **formulación continua adaptada del modelo SWAT** y acotado al rango teórico 30–100.
+- 👁️ **Visualización completa** — todas las capas base e intermedias se agregan al mapa con leyenda, permitiendo auditar el modelo paso a paso.
+- ⬇️ **Descarga consolidada** — enlaces directos (GeoTIFF) o exportación a **Google Drive** (carpeta `GEE_Exports_Chile`).
+
+**Clases de pendiente**
+
+| Clase | Pendiente (%) | Clase | Pendiente (%) |
+|:-----:|---------------|:-----:|---------------|
+| 1 | ≤ 3 | 5 | 25 – 50 |
+| 2 | 3 – 7 | 6 | 50 – 75 |
+| 3 | 7 – 12 | 7 | > 75 |
+| 4 | 12 – 25 | | |
+
+**Interpretación del resultado**
+
+| Potencial | Número de Curva |
+|-----------|-----------------|
+| 🔵 Muy bajo | CN < 55 |
+| 🟦 Bajo | CN 55 – 70 |
+| 🟡 Moderado | CN 70 – 80 |
+| 🟠 Alto | CN 80 – 90 |
+| 🔴 Muy alto | CN > 90 |
+
+**Datos de entrada**
+
+| Variable | Fuente | Resolución |
+|----------|--------|-----------|
+| Terreno (elevación y pendiente) | NASA NASADEM HGT V001 | 30 m |
+| Suelo (arena, limo, arcilla) | ISRIC SoilGrids 2.0 | 250 m |
+| Uso y cobertura de suelo | ESA WorldCover (v100 / v200) | 10 m |
+| Límites administrativos | Provincias y comunas de Chile (*assets* propios) | vectorial |
+
+**Cómo usarla**
+
+1. Abre el script en el **Code Editor** de GEE y presiona **Run**.
+2. **Paso 1** — selecciona la provincia y, si quieres, la comuna.
+3. **Paso 2** — elige el año del uso de suelo y marca las capas de entrada.
+4. Pulsa **`1. Analizar y Visualizar Capas Base`** y espera a que se procesen las capas (suelo, pendiente, uso de suelo).
+5. Pulsa **`2. Analizar Potencial de Escorrentía (CN)`** para generar el mapa final.
+6. Usa **`Generar Links de Descarga`** o **`Exportar a Google Drive`** para obtener los rásteres.
+
+**Capas descargables:** texturas (arena, limo, arcilla), clase textural USDA, grupo hidrológico de suelo, elevación, pendiente (grados y %), clases de pendiente, uso de suelo (10 m y 30 m) y el mapa final de potencial de escorrentía.
+
+---
+
+### 2. Descargador de Imágenes Satelitales
+
+> Utilidad práctica para obtener **datos listos para análisis** (*Analysis-Ready Data*) sobre cualquier provincia o comuna de Chile, con enmascaramiento de nubes y NDVI incluido.
+
+**Características principales**
+
+- 🛰️ **Elección de satélite** — **Sentinel-2** (10 m), **Landsat 9** y **Landsat 8** (30 m).
+- 🔍 **Filtros personalizados** — rango de fechas y porcentaje máximo de nubosidad.
+- 🧩 **Imagen única o mosaico** — la mejor imagen disponible (menor nubosidad y mayor cobertura del área) o un **mosaico mediano** del período.
+- ☁️ **Enmascaramiento de nubes** — banda `SCL` en Sentinel-2 y `QA_PIXEL` en Landsat; reflectancia escalada a valores físicos.
+- 🌿 **NDVI automático** — se calcula y agrega como banda adicional.
+- ⬇️ **Descargas flexibles** — bandas individuales (Blue, Green, Red, NIR, NDVI) por enlace directo, o el *stack* completo exportado a Google Drive, listo para QGIS/ArcGIS.
+
+**Datos de entrada**
+
+| Colección | Producto |
+|-----------|----------|
+| `COPERNICUS/S2_SR_HARMONIZED` | Sentinel-2 MSI, Nivel-2A (reflectancia de superficie) |
+| `LANDSAT/LC09/C02/T1_L2` | Landsat 9 Collection 2, Nivel-2 |
+| `LANDSAT/LC08/C02/T1_L2` | Landsat 8 Collection 2, Nivel-2 |
+
+**Cómo usarla**
+
+1. Abre el script en el **Code Editor** de GEE y presiona **Run**.
+2. Selecciona la provincia y, opcionalmente, la comuna.
+3. Elige el satélite.
+4. Define el rango de fechas y la nubosidad máxima.
+5. Indica si quieres una **imagen única** o un **mosaico**.
+6. Pulsa **`1. Analizar y Visualizar`** y luego usa los botones de descarga.
+
+> [!TIP]
+> Las imágenes de Sentinel-2 a 10 m pueden superar el límite de la descarga directa por enlace. En áreas grandes, usa **Landsat** o la **exportación a Google Drive**.
+
+---
+
+## 🚀 Instalación y ejecución
+
+```text
+1. Inicia sesión en Google Earth Engine   →  https://code.earthengine.google.com/
+2. Copia el contenido completo de uno de los archivos .js de este repositorio
+3. Pégalo en el Code Editor de GEE
+4. Haz clic en "Run": la interfaz se carga en el panel lateral
+5. Sigue las instrucciones de uso de cada aplicación
+```
+
+También puedes clonar el repositorio localmente para versionar tus cambios:
+
+```bash
+git clone https://github.com/lvsantarosa/gee-global-data-chile.git
+```
+
+> [!NOTE]
+> Necesitas una cuenta de **Google Earth Engine** habilitada. Si prefieres no ejecutar el código, usa directamente las **apps web** enlazadas más arriba.
+
+## 📂 Estructura del repositorio
+
+```text
+gee-global-data-chile/
+├── MULTICRITERIO_GEE_Chile.js    # App 1 · Potencial de escorrentía (método CN)
+├── DOWNLOAD_S2_L8_L9_Chile.js    # App 2 · Descarga de imágenes Sentinel-2 / Landsat 8-9
+└── README.md
+```
+
+## ⚙️ Requisitos y notas técnicas
+
+- **Cuenta GEE** activa y acceso al Code Editor.
+- Los límites administrativos provienen de *assets* públicos del autor (`projects/ee-lucasviturisantarosa/assets/Provincias_CL` y `Comunas_CL`); si los reemplazas por tus propios *assets*, ajusta también los nombres de columna en el bloque `config` de cada script.
+- Las exportaciones a Drive se crean como **tareas**: ábrelas en la pestaña **Tasks** del Code Editor y pulsa **RUN** para que se generen los archivos.
+- Los resultados son **estimaciones basadas en datos globales**; para decisiones de ingeniería o gestión conviene validarlos con información local de campo.
+- La **pendiente** se evalúa a la escala que solicita el mapa: al alejar el zoom se ve suavizada. El valor de referencia es el del GeoTIFF exportado a 30 m, que usa la resolución nativa del DEM.
+
+## 📝 Cómo citar
+
+> Santarosa, L. V. (2025). *GEE Global Data — Chile: herramientas de geoprocesamiento para el análisis territorial*. Laboratorio de Recursos Hídricos y Geotecnologías, Escuela de Agronomía, Pontificia Universidad Católica de Valparaíso. https://github.com/lvsantarosa/gee-global-data-chile
+
+## 📄 Licencia
+
+Distribuido bajo la **Licencia MIT** — consulta el archivo [`LICENSE`](LICENSE). Puedes usar, modificar y redistribuir el código, incluso con fines comerciales, conservando el aviso de copyright. El software se entrega *tal cual*, sin garantías.
+
+Los **datos** de entrada mantienen las licencias de sus proveedores (NASA, ISRIC SoilGrids, ESA WorldCover, Copernicus, USGS); cítalos según corresponda.
+
+## 👤 Autoría y contacto
+
+- **Autor:** Lucas Vituri Santarosa
+- **Institución:** Laboratorio de Recursos Hídricos y Geotecnologías, Escuela de Agronomía, **Pontificia Universidad Católica de Valparaíso**
+- Los scripts fueron desarrollados y refinados con la asistencia de la IA Gemini de Google.
+
+¿Encontraste un error o tienes una sugerencia? Abre un *issue* o envía un *pull request*. ¡Las contribuciones son bienvenidas!
