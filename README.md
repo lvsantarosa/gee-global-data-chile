@@ -10,6 +10,7 @@
   <img alt="Lenguaje" src="https://img.shields.io/badge/JavaScript-GEE%20API-F7DF1E?logo=javascript&logoColor=black">
   <img alt="Cobertura" src="https://img.shields.io/badge/Cobertura-Chile%20(provincias%20y%20comunas)-C8102E">
   <img alt="Apps" src="https://img.shields.io/badge/Apps%20publicadas-2-success">
+  <a href="LICENSE"><img alt="Licencia" src="https://img.shields.io/badge/Licencia-MIT-blue"></a>
 </p>
 
 <p align="center">
@@ -31,6 +32,7 @@ Este repositorio reúne **aplicaciones interactivas de Google Earth Engine (GEE)
 - [Estructura del repositorio](#-estructura-del-repositorio)
 - [Requisitos y notas técnicas](#-requisitos-y-notas-técnicas)
 - [Cómo citar](#-cómo-citar)
+- [Licencia](#-licencia)
 - [Autoría y contacto](#-autoría-y-contacto)
 
 ## 🧰 Aplicaciones disponibles
@@ -51,8 +53,8 @@ Este repositorio reúne **aplicaciones interactivas de Google Earth Engine (GEE)
 - 🗺️ **Selección flexible del área** — análisis por **provincia** y, opcionalmente, por **comuna**.
 - 🌱 **Uso de suelo configurable** — ESA WorldCover **2020** o **2021**.
 - 🧪 **Clasificación textural detallada** — determina una de las **12 clases texturales USDA** por píxel (arena/limo/arcilla) y la traduce a uno de los **4 Grupos Hidrológicos de Suelo (A–D)**.
-- ⛰️ **Procesamiento avanzado del terreno** — filtro de suavizado (*fill*) sobre el DEM antes de calcular la pendiente, con reclasificación en **7 clases de relieve**.
-- 💧 **Modelo de escorrentía referenciado** — CN base a partir de la interacción Suelo × Uso de suelo, ajustado por pendiente con una **formulación continua adaptada del modelo SWAT**.
+- ⛰️ **Procesamiento avanzado del terreno** — suavizado por **mediana focal** (60 m) del DEM para atenuar ruido y vacíos antes de calcular la pendiente, con reclasificación en **7 clases de relieve**.
+- 💧 **Modelo de escorrentía referenciado** — CN base a partir de la interacción Suelo × Uso de suelo (las 11 clases de WorldCover, incluidas nieve/hielo y cuerpos de agua), ajustado por pendiente con una **formulación continua adaptada del modelo SWAT** y acotado al rango teórico 30–100.
 - 👁️ **Visualización completa** — todas las capas base e intermedias se agregan al mapa con leyenda, permitiendo auditar el modelo paso a paso.
 - ⬇️ **Descarga consolidada** — enlaces directos (GeoTIFF) o exportación a **Google Drive** (carpeta `GEE_Exports_Chile`).
 
@@ -166,10 +168,17 @@ gee-global-data-chile/
 - Los límites administrativos provienen de *assets* públicos del autor (`projects/ee-lucasviturisantarosa/assets/Provincias_CL` y `Comunas_CL`); si los reemplazas por tus propios *assets*, ajusta también los nombres de columna en el bloque `config` de cada script.
 - Las exportaciones a Drive se crean como **tareas**: ábrelas en la pestaña **Tasks** del Code Editor y pulsa **RUN** para que se generen los archivos.
 - Los resultados son **estimaciones basadas en datos globales**; para decisiones de ingeniería o gestión conviene validarlos con información local de campo.
+- La **pendiente** se evalúa a la escala que solicita el mapa: al alejar el zoom se ve suavizada. El valor de referencia es el del GeoTIFF exportado a 30 m, que usa la resolución nativa del DEM.
 
 ## 📝 Cómo citar
 
 > Santarosa, L. V. (2025). *GEE Global Data — Chile: herramientas de geoprocesamiento para el análisis territorial*. Laboratorio de Recursos Hídricos y Geotecnologías, Escuela de Agronomía, Pontificia Universidad Católica de Valparaíso. https://github.com/lvsantarosa/gee-global-data-chile
+
+## 📄 Licencia
+
+Distribuido bajo la **Licencia MIT** — consulta el archivo [`LICENSE`](LICENSE). Puedes usar, modificar y redistribuir el código, incluso con fines comerciales, conservando el aviso de copyright. El software se entrega *tal cual*, sin garantías.
+
+Los **datos** de entrada mantienen las licencias de sus proveedores (NASA, ISRIC SoilGrids, ESA WorldCover, Copernicus, USGS); cítalos según corresponda.
 
 ## 👤 Autoría y contacto
 

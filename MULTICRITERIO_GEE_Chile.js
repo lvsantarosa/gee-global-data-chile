@@ -1,12 +1,13 @@
 // =================================================================================
-// Laboratorio de Recursos Hidricos y Geotecnologias
-// Escuela de Agronomia - Pontificia Universidad Catolica de Valparaíso
+// Laboratorio de Recursos Hídricos y Geotecnologías
+// Escuela de Agronomía - Pontificia Universidad Católica de Valparaíso
 // Autor: Lucas Vituri Santarosa
-// Elaborado em 23/9/2025 con ayuda de Gemini
+// Elaborado el 23/9/2025 con ayuda de Gemini
+// Licencia: MIT (ver archivo LICENSE del repositorio)
 //
-// Propósito: Analizar el potencial de escorrentía superficial utilizando o método
-//            del Número de Curva (CN), com classificação textural detalhada (USDA)
-//            para a determinação dos Grupos Hidrológicos de Solo.
+// Propósito: Analizar el potencial de escorrentía superficial mediante el método
+//            del Número de Curva (CN), con clasificación textural detallada (USDA)
+//            para la determinación de los Grupos Hidrológicos de Suelo (HSG).
 // =================================================================================
 
 // =================================================================================
@@ -17,7 +18,8 @@ var assets = {
   comunas: ee.FeatureCollection('projects/ee-lucasviturisantarosa/assets/Comunas_CL')
 };
 var config = {
-  columnas: { provincia: 'Provincia', comuna: 'Comuna', provEnComunas: 'Provincia'}
+  columnas: { provincia: 'Provincia', comuna: 'Comuna', provEnComunas: 'Provincia'},
+  opcionProvinciaCompleta: '--- (Analizar Provincia Completa) ---'
 };
 
 // =================================================================================
@@ -79,7 +81,7 @@ app.ui.createWidgets = function() {
 // =================================================================================
 app.handlers.onProvinciaChange = function(provinciaNombre) {
   if (!provinciaNombre) return;
-  app.ui.mapPanel.layers().reset(); app.ui.resultPanel.clear(); app.ui.downloadPanel.clear();
+  app.helpers.resetMap(); app.ui.resultPanel.clear(); app.ui.downloadPanel.clear();
   var provinciaFeature = assets.provincias.filter(ee.Filter.eq(config.columnas.provincia, provinciaNombre)).first();
   app.state.aoi = provinciaFeature.geometry();
   app.state.selectedLocationName = provinciaNombre;
@@ -89,7 +91,7 @@ app.handlers.onProvinciaChange = function(provinciaNombre) {
   var comunasFiltradas = assets.comunas.filter(ee.Filter.eq(config.columnas.provEnComunas, provinciaNombre));
   var comunasNombres = comunasFiltradas.aggregate_array(config.columnas.comuna).sort();
   comunasNombres.evaluate(function(nombres) {
-    nombres.unshift('--- (Analizar Provincia Completa) ---');
+    nombres.unshift(config.opcionProvinciaCompleta);
     app.ui.comunaSelect.items().reset(nombres); app.ui.comunaSelect.setValue(nombres[0], false); app.ui.comunaSelect.setDisabled(false);
   });
 };
@@ -98,7 +100,7 @@ app.handlers.onComunaChange = function(comunaNombre) {
   if (!comunaNombre) return;
   var provinciaNombre = app.ui.provinciaSelect.getValue();
   var aoiFeature;
-  if (comunaNombre !== '--- (Analizar Provincia Completa) ---') {
+  if (comunaNombre !== config.opcionProvinciaCompleta) {
     aoiFeature = assets.comunas.filter(ee.Filter.and(ee.Filter.eq(config.columnas.provEnComunas, provinciaNombre), ee.Filter.eq(config.columnas.comuna, comunaNombre))).first();
     app.state.selectedLocationName = comunaNombre;
   } else {
@@ -106,14 +108,17 @@ app.handlers.onComunaChange = function(comunaNombre) {
     app.state.selectedLocationName = provinciaNombre;
   }
   app.state.aoi = aoiFeature.geometry();
-  app.ui.mapPanel.clear(); app.ui.mapPanel.centerObject(app.state.aoi, 11);
+  app.helpers.resetMap();
+  app.ui.resultPanel.clear(); app.ui.downloadPanel.clear();
+  app.ui.mapPanel.centerObject(app.state.aoi, 11);
   app.ui.mapPanel.addLayer(app.state.aoi, {color: '#FFFF00', fillColor: '00000000', width: 2.0}, 'Área de Análisis');
 };
 
 app.handlers.runAnalysis = function() {
   app.ui.runButton.setDisabled(true); app.ui.downloadButton.setDisabled(true); app.ui.exportButton.setDisabled(true); app.ui.erosionButton.setDisabled(true);
   app.ui.downloadPanel.clear(); app.ui.resultPanel.clear().add(ui.Label('🔎 Analizando capas base...', {fontWeight: 'bold'}));
-  app.ui.mapPanel.layers().reset(); app.ui.mapPanel.addLayer(app.state.aoi, {color: '#FFFF00', fillColor: '00000000', width: 2.0}, 'Área de Análisis');
+  app.helpers.resetMap();
+  app.ui.mapPanel.addLayer(app.state.aoi, {color: '#FFFF00', fillColor: '00000000', width: 2.0}, 'Área de Análisis');
   app.helpers.finalizeProcessing();
 };
 
@@ -123,6 +128,13 @@ app.handlers.runExportsToDrive = function() { app.helpers.createDownloads(true);
 // =================================================================================
 // 4. FUNCIONES DE AYUDA (Helpers)
 // =================================================================================
+// Quita las capas y la leyenda del análisis anterior para que no se acumulen.
+app.helpers.resetMap = function() {
+  app.ui.mapPanel.layers().reset();
+  app.state.runoffImage = null;
+  if (app.ui.legendPanel) { app.ui.mapPanel.remove(app.ui.legendPanel); app.ui.legendPanel = null; }
+};
+
 app.helpers.finalizeProcessing = function() {
   var finalComposite = ee.Image(); 
   
@@ -141,12 +153,16 @@ app.helpers.finalizeProcessing = function() {
 
     finalComposite = finalComposite.addBands(soil).addBands(soilTextureClass).addBands(hsg);
     var hsgVis = {min: 1, max: 4, palette: ['#FFFF00', '#008000', '#0000FF', '#FF0000']};
-    app.ui.mapPanel.addLayer(soilTextureClass, {min:1, max:12, palette:['#E8D8B3','#E4CDA2','#F4A460','#D2B48C','#987654','#8B4513','#708090','#93C572','#A1D683','#B5E48C','#008000','#6A5ACD']}, 'Clase Textural do Solo (USDA)');
+    app.ui.mapPanel.addLayer(soilTextureClass, {min:1, max:12, palette:['#E8D8B3','#E4CDA2','#F4A460','#D2B48C','#987654','#8B4513','#708090','#93C572','#A1D683','#B5E48C','#008000','#6A5ACD']}, 'Clase Textural del Suelo (USDA)');
     app.ui.mapPanel.addLayer(hsg, hsgVis, 'Grupo Hidrológico de Suelo (HSG)');
   }
   if (app.ui.demCheckbox.getValue()) {
     app.ui.resultPanel.add(ui.Label('⚙️ Procesando DEM y pendiente...'));
     var dem_raw = ee.Image('NASA/NASADEM_HGT/001').select('elevation').clip(app.state.aoi);
+    // Mediana focal para atenuar el ruido y los vacíos del DEM antes de derivar la pendiente.
+    // Nota: ee.Terrain.slope se evalúa a la escala solicitada, por lo que la pendiente
+    // mostrada en el mapa se suaviza al alejar el zoom. El valor de referencia es el del
+    // GeoTIFF exportado a 30 m, que usa la resolución nativa del DEM.
     var dem_filled = dem_raw.focal_median({radius: 60, units: 'meters'});
     var slope = ee.Terrain.slope(dem_filled);
     var slopePercent = slope.multiply(Math.PI/180).tan().multiply(100);
@@ -193,26 +209,32 @@ app.helpers.calculateCurveNumber = function() {
   var hsg = image.select('hsg');
   var lulc = image.select('LandCover');
   
-  var cnA = lulc.remap([10,20,30,40,50,60,90,95], [30,39,39,67,77,77,39,30], 0);
-  var cnB = lulc.remap([10,20,30,40,50,60,90,95], [55,61,61,78,86,86,61,55], 0);
-  var cnC = lulc.remap([10,20,30,40,50,60,90,95], [70,74,74,85,91,91,74,70], 0);
-  var cnD = lulc.remap([10,20,30,40,50,60,90,95], [77,80,80,89,94,94,80,77], 0);
+  // Clases ESA WorldCover: 10 árboles, 20 matorral, 30 pastizal, 40 cultivo, 50 urbano,
+  // 60 suelo desnudo, 70 nieve/hielo, 80 agua, 90 humedal, 95 manglar, 100 musgo/liquen.
+  // Se incluyen 70, 80 y 100 (antes caían al valor por defecto y quedaban enmascaradas).
+  var lulcClasses = [10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100];
+  var cnA = lulc.remap(lulcClasses, [30, 39, 39, 67, 77, 77, 98, 100, 39, 30, 39], 0);
+  var cnB = lulc.remap(lulcClasses, [55, 61, 61, 78, 86, 86, 98, 100, 61, 55, 61], 0);
+  var cnC = lulc.remap(lulcClasses, [70, 74, 74, 85, 91, 91, 98, 100, 74, 70, 74], 0);
+  var cnD = lulc.remap(lulcClasses, [77, 80, 80, 89, 94, 94, 98, 100, 80, 77, 80], 0);
   var cnBase = ee.Image(0).where(hsg.eq(1), cnA).where(hsg.eq(2), cnB).where(hsg.eq(3), cnC).where(hsg.eq(4), cnD).selfMask();
   
   var S = image.select('slope_percent').divide(100);
   var term1 = ee.Image(20).multiply(S).multiply(ee.Image(100).subtract(cnBase));
   var term2 = (ee.Image(100).subtract(cnBase)).add(ee.Image(7.5).multiply(S).exp());
-  var runoffPotentialCN = cnBase.add(term1.divide(term2)).rename('Runoff_CN');
+  var runoffPotentialCN = cnBase.add(term1.divide(term2)).clamp(30, 100).rename('Runoff_CN');
   
   app.state.runoffImage = runoffPotentialCN;
   var runoffPalette = ['#2c7bb6', '#abd9e9', '#ffffbf', '#fdae61', '#d7191c'];
   app.ui.mapPanel.addLayer(runoffPotentialCN, {min: 30, max: 100, palette: runoffPalette}, 'Potencial de Escorrentía (CN)');
   
+  if (app.ui.legendPanel) { app.ui.mapPanel.remove(app.ui.legendPanel); }
   var legend = ui.Panel({style: {position: 'bottom-left', padding: '8px 15px'}});
   legend.add(ui.Label({value: 'Potencial de Escorrentía (CN)', style: {fontWeight: 'bold', fontSize: '18px'}}));
   var makeRow = function(c, n) { return ui.Panel({widgets: [ui.Label({style:{backgroundColor:c,padding:'8px',margin:'0 4px'}}), ui.Label(n)], layout: ui.Panel.Layout.Flow('horizontal')});};
   var names = ['Muy Bajo (CN < 55)', 'Bajo (CN 55-70)', 'Moderado (CN 70-80)', 'Alto (CN 80-90)', 'Muy Alto (CN > 90)'];
   for (var i = 0; i < 5; i++) { legend.add(makeRow(runoffPalette[i], names[i])); }
+  app.ui.legendPanel = legend;
   app.ui.mapPanel.add(legend);
   app.ui.resultPanel.add(ui.Label('✅ Análisis de Escorrentía (CN) concluido.', {color: 'green'}));
 };
@@ -261,23 +283,23 @@ app.helpers.getSoilTextureClass = function(soil) {
   var silt = soil.select('silt');
   var clay = soil.select('clay');
   
-  // Condições lógicas para as 12 classes texturais da USDA
+  // Condiciones lógicas para las 12 clases texturales de la USDA
   var class1 = sand.gte(85).and(silt.add(clay.multiply(1.5)).lt(15)); // Arena
-  var class2 = sand.gte(70).and(sand.lt(90)).and(silt.add(clay.multiply(1.5)).gte(15)).and(silt.add(clay.multiply(2)).lt(30)); // Arena Franca
+  var class2 = sand.gte(70).and(sand.lt(90)).and(silt.add(clay.multiply(1.5)).gte(15)).and(silt.add(clay.multiply(2)).lt(30)); // Arena franca
   var class3 = clay.gte(7).and(clay.lt(20)).and(sand.gt(52)).and(silt.add(clay.multiply(2)).gte(30))
-              .or(clay.lt(7).and(silt.lt(50)).and(silt.add(clay.multiply(2)).gte(30))); // Franco Arenoso
+              .or(clay.lt(7).and(silt.lt(50)).and(silt.add(clay.multiply(2)).gte(30))); // Franco arenoso
   var class4 = clay.gte(7).and(clay.lt(27)).and(silt.gte(28)).and(silt.lt(50)).and(sand.lte(52)); // Franco
   var class5 = silt.gte(50).and(clay.gte(12)).and(clay.lt(27))
-              .or(silt.gte(50).and(silt.lt(80)).and(clay.lt(12))); // Franco Siltoso
-  var class6 = silt.gte(80).and(clay.lt(12)); // Silt
-  var class7 = clay.gte(20).and(clay.lt(35)).and(silt.lt(28)).and(sand.gt(45)); // Franco Argilo-Arenoso
-  var class8 = clay.gte(27).and(clay.lt(40)).and(sand.gt(20)).and(sand.lte(45)); // Franco Argiloso
-  var class9 = clay.gte(27).and(clay.lt(40)).and(sand.lte(20)); // Franco Argilo-Siltoso
-  var class10 = clay.gte(35).and(sand.gte(45)); // Argila Arenosa
-  var class11 = clay.gte(40).and(silt.gte(40)); // Argila Siltosa
-  var class12 = clay.gte(40).and(sand.lte(45)).and(silt.lt(40)); // Argila
+              .or(silt.gte(50).and(silt.lt(80)).and(clay.lt(12))); // Franco limoso
+  var class6 = silt.gte(80).and(clay.lt(12)); // Limo
+  var class7 = clay.gte(20).and(clay.lt(35)).and(silt.lt(28)).and(sand.gt(45)); // Franco arcillo-arenoso
+  var class8 = clay.gte(27).and(clay.lt(40)).and(sand.gt(20)).and(sand.lte(45)); // Franco arcilloso
+  var class9 = clay.gte(27).and(clay.lt(40)).and(sand.lte(20)); // Franco arcillo-limoso
+  var class10 = clay.gte(35).and(sand.gte(45)); // Arcilla arenosa
+  var class11 = clay.gte(40).and(silt.gte(40)); // Arcilla limosa
+  var class12 = clay.gte(40).and(sand.lte(45)).and(silt.lt(40)); // Arcilla
 
-  // Aplica as condições sequencialmente para classificar cada pixel
+  // Aplica las condiciones de forma secuencial para clasificar cada píxel
   var texture = ee.Image(0)
     .where(class1, 1).where(class2, 2).where(class3, 3).where(class4, 4)
     .where(class5, 5).where(class6, 6).where(class7, 7).where(class8, 8)
